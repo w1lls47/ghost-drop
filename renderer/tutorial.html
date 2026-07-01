@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:;" />
+<link rel="stylesheet" href="tutorial.css" />
+<title>Welcome to Ghost-Drop</title>
+</head>
+<body>
+  <div id="card">
+    <div id="slides">
+
+      <section class="slide" data-step="0">
+        <div class="emoji">👻</div>
+        <h1>Welcome to Ghost-Drop</h1>
+        <p>A tiny shelf that lives on your screen. Drop files on it, drag them
+           into any app, and it cleans up after itself. Four quick things to
+           know — then it's out of your way for good.</p>
+      </section>
+
+      <section class="slide" data-step="1">
+        <div class="emoji">📥</div>
+        <h2>Drop anything on it</h2>
+        <p>Drag a file from a browser download, Explorer, anywhere — onto the
+           faint icon in the corner of your screen. It lights up while you're
+           hovering, then catches the file.</p>
+      </section>
+
+      <section class="slide" data-step="2">
+        <div class="emoji">📤</div>
+        <h2>Drag it back out</h2>
+        <p>Click and drag the icon straight into Premiere, Photoshop, Discord,
+           or any folder. Ghost-Drop hands it off like the file came from
+           your real file system — because as far as that app is concerned,
+           it did.</p>
+      </section>
+
+      <section class="slide" data-step="3">
+        <div class="emoji">🗂️</div>
+        <h2>Hover to see everything cached</h2>
+        <p>Hold your mouse over the icon and it expands to show every file
+           waiting on the shelf. Click any file to select it, drag the
+           little grip to reorder, and move your mouse away to fold it back
+           down. Drag one file out, drag your whole selection out, or drag
+           the icon itself for everything.</p>
+      </section>
+
+      <section class="slide" data-step="4">
+        <div class="emoji">✨</div>
+        <h2>That's it</h2>
+        <p>No save dialogs, nothing to remember to delete. Quit anytime from
+           the tray icon — everything cached gets wiped the moment you do.</p>
+      </section>
+
+    </div>
+
+    <div id="dots"></div>
+
+    <div id="controls">
+      <button id="skipBtn" class="ghost-btn">Skip</button>
+      <button id="nextBtn" class="primary-btn">Next</button>
+    </div>
+  </div>
+
+  <script src="tutorial.js"></script>
+</body>
+</html>

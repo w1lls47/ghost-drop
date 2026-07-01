@@ -1,0 +1,196 @@
+:root {
+  --idle-bg: #111418;
+  --hover-bg: #00e5ff;
+  --populated-bg: #161a21;
+  --panel-bg: rgba(22, 25, 31, 0.82);
+  --accent: #00e5ff;
+  --row-bg: rgba(255, 255, 255, 0.04);
+  --row-bg-hover: rgba(255, 255, 255, 0.08);
+  --row-bg-selected: rgba(0, 229, 255, 0.14);
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 150px;
+  height: 100%;
+  overflow: hidden;
+  background: transparent;
+  font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-app-region: no-drag; /* this is content, not window chrome */
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---------------------------------------------------------------- */
+/* THE ICON — unchanged from v1: idle / hover / populated visuals   */
+/* ---------------------------------------------------------------- */
+
+#dropzone {
+  width: 150px;
+  height: 150px;
+  flex: 0 0 150px;
+  border-radius: 18px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--idle-bg);
+  opacity: 0.2;
+  transition: opacity 120ms ease, background-color 120ms ease, transform 120ms ease, border-color 120ms ease;
+  border: 2px solid transparent;
+}
+
+#icon {
+  font-size: 46px;
+  line-height: 1;
+  filter: grayscale(1) brightness(2);
+}
+
+#count {
+  margin-top: 6px;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.hidden {
+  display: none;
+}
+
+body[data-state="hover"] #dropzone {
+  opacity: 1;
+  background: var(--hover-bg);
+  transform: scale(1.05);
+}
+body[data-state="hover"] #icon {
+  filter: grayscale(1) brightness(0.1);
+}
+
+body[data-state="populated"] #dropzone,
+body[data-state="expanded"] #dropzone {
+  opacity: 0.92;
+  background: var(--populated-bg);
+  border-color: var(--accent);
+  cursor: grab;
+}
+body[data-state="populated"] #icon,
+body[data-state="expanded"] #icon {
+  filter: none;
+}
+#dropzone:active {
+  cursor: grabbing;
+  transform: scale(0.97);
+}
+
+/* ---------------------------------------------------------------- */
+/* THE FILE PANEL — liquid-glass reveal, invisible unless expanded  */
+/* ---------------------------------------------------------------- */
+
+#filePanel {
+  flex: 1 1 auto;
+  margin-top: 8px;
+  padding: 10px;
+  box-sizing: border-box;
+  border-radius: 16px;
+  background: var(--panel-bg);
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+  position: relative;
+  overflow: hidden;
+
+  opacity: 0;
+  transform: translateY(-6px) scale(0.97);
+  pointer-events: none;
+  transition: opacity 260ms cubic-bezier(0.34, 1.56, 0.64, 1),
+              transform 260ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* a faint specular highlight along the top edge — the "glass" cue */
+#filePanel::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 40%;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.07), transparent);
+  pointer-events: none;
+}
+
+body[data-state="expanded"] #filePanel {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+  transition: opacity 300ms cubic-bezier(0.34, 1.56, 0.64, 1),
+              transform 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+#fileList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 190px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+#fileList::-webkit-scrollbar {
+  width: 4px;
+}
+#fileList::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 2px;
+}
+
+.file-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 8px;
+  border-radius: 9px;
+  background: var(--row-bg);
+  border: 1px solid transparent;
+  cursor: grab;
+  transition: background-color 140ms ease, transform 140ms ease, border-color 140ms ease;
+}
+.file-row:hover {
+  background: var(--row-bg-hover);
+}
+.file-row:active {
+  transform: scale(0.98);
+}
+.file-row.selected {
+  background: var(--row-bg-selected);
+  border-color: rgba(0, 229, 255, 0.5);
+}
+.file-row.dragging-reorder {
+  opacity: 0.4;
+}
+
+.file-row .grip {
+  flex: 0 0 auto;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.35);
+  cursor: grab;
+  padding: 2px 4px;
+  line-height: 1;
+}
+.file-row .grip:active {
+  cursor: grabbing;
+}
+
+.file-row .file-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 11.5px;
+  color: rgba(255, 255, 255, 0.88);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

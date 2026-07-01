@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:;" />
+<link rel="stylesheet" href="style.css" />
+<title>Ghost-Drop</title>
+</head>
+<body data-state="idle">
+  <div id="dropzone">
+    <div id="icon">👻</div>
+    <div id="count" class="hidden">0</div>
+  </div>
+
+  <div id="filePanel">
+    <ul id="fileList"></ul>
+  </div>
+
+  <script src="renderer.js"></script>
+</body>
+</html>

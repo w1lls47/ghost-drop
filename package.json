@@ -1,0 +1,48 @@
+{
+  "name": "ghost-drop",
+  "version": "1.1.0",
+  "description": "Stateless drag-and-drop file shelf. Drop it in, drag it out, it never asks where to save and never leaves a trace.",
+  "main": "main.js",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder"
+  },
+  "devDependencies": {
+    "electron": "^31.0.0",
+    "electron-builder": "^25.0.0"
+  },
+  "build": {
+    "appId": "com.flushtech.ghostdrop",
+    "productName": "Ghost-Drop",
+    "copyright": "Copyright (c) 2026 FlushTech",
+    "asar": false,
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "main.js",
+      "modules/**/*",
+      "renderer/**/*",
+      "assets/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        { "target": "nsis", "arch": ["x64"] }
+      ],
+      "icon": "build/icon.ico"
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": false,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Ghost-Drop",
+      "artifactName": "GhostDrop-Setup-${version}.exe",
+      "deleteAppDataOnUninstall": true
+    }
+  }
+}
