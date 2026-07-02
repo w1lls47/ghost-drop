@@ -2,16 +2,21 @@
 <html>
 <head>
 <meta charset="UTF-8" />
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:;" />
+<!-- file: added to img-src so shelf thumbnails load from %APPDATA%\Ghost-Drop\Shelf\ -->
+<meta http-equiv="Content-Security-Policy"
+  content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: file:;" />
 <link rel="stylesheet" href="style.css" />
 <title>Ghost-Drop</title>
 </head>
-<body data-state="idle">
+<body data-state="idle" data-loading="false">
+
+  <!-- THE ICON: always 150×150, the part that's always visible -->
   <div id="dropzone">
     <div id="icon">👻</div>
     <div id="count" class="hidden">0</div>
   </div>
 
+  <!-- THE PANEL: zero height when collapsed, CSS-animated into view on hover -->
   <div id="filePanel">
     <ul id="fileList"></ul>
   </div>

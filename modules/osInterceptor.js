@@ -1,20 +1,17 @@
 /**
- * THE OS INTERCEPTOR (The Bridge)
- * ---------------------------------
- * Hooks the IPC layer that bridges renderer-side HTML5 drag events to the
- * real operating system.
+ * THE OS INTERCEPTOR (The Bridge) — v1.2.0
+ * ------------------------------------------
+ * Handles all IPC between the renderer and the OS / file system.
  *
- * INBOUND: the renderer already received the OS-native drop (Chromium
- * surfaces that as a normal `drop` event); this module's job is just to
- * take the resolved source paths and hand them to the Ghost Directory.
+ * INBOUND (files arriving into Ghost-Drop):
+ *   ghost-drop:drop-files  — local file paths from Explorer / download bar
+ *   ghost-drop:fetch-url   — URL from browser image drag (no local path exists)
+ *   ghost-drop:write-blob  — raw ArrayBuffer from browser blob drag
  *
- * OUTBOUND: this is the actual "trick". When the user drags a populated
- * icon out of the overlay, we intercept the renderer's `dragstart`,
- * suppress Chromium's default (web-only) drag, and call
- * webContents.startDrag() instead — which asks the OS to begin a native
- * drag session carrying a real file path. To the target app (Premiere,
- * Photoshop, Explorer, Finder) this is indistinguishable from a drag
- * that started in their own native file browser.
+ * OUTBOUND (files leaving Ghost-Drop to an external app):
+ *   ghost-drop:start-native-drag — starts an OS-native drag session carrying
+ *     the permanent shelf paths, so Premiere/Photoshop see them exactly as
+ *     if the drag originated in a native file browser.
  */
 
 const path = require('path');
@@ -22,22 +19,46 @@ const { nativeImage } = require('electron');
 const ghostDirectory = require('./ghostDirectory');
 
 function registerInterceptors(ipcMain, win) {
-  // INBOUND
-  ipcMain.handle('ghost-drop:drop-files', async (_event, sourcePaths) => {
-    const cached = [];
+
+  // ── INBOUND: local files ─────────────────────────────────────────────────
+  ipcMain.handle('ghost-drop:drop-files', async (_e, sourcePaths) => {
+    const out = [];
     for (const src of sourcePaths) {
       try {
-        const destPath = await ghostDirectory.copyFileIn(src);
-        cached.push({ name: path.basename(destPath), path: destPath });
+        const dest = await ghostDirectory.copyFileIn(src);
+        out.push({ name: path.basename(dest), path: dest });
       } catch (err) {
-        console.error('[Ghost-Drop] copy failed for', src, err);
+        console.error('[Ghost-Drop] copy failed:', src, err.message);
       }
     }
-    return cached;
+    return out;
   });
 
-  // OUTBOUND — must be synchronous w.r.t. the native mouse-down/drag gesture,
-  // so this is `ipcMain.on` (fire-and-forget), never `invoke`.
+  // ── INBOUND: URL (browser image drag where no local path is available) ───
+  ipcMain.handle('ghost-drop:fetch-url', async (_e, url) => {
+    try {
+      const dest = await ghostDirectory.fetchUrlToShelf(url);
+      return { name: path.basename(dest), path: dest };
+    } catch (err) {
+      console.error('[Ghost-Drop] fetch failed:', url, err.message);
+      return null;
+    }
+  });
+
+  // ── INBOUND: raw blob (browser canvas / data-URI drag) ───────────────────
+  ipcMain.handle('ghost-drop:write-blob', async (_e, buffer, fileName) => {
+    try {
+      const dest = await ghostDirectory.writeBufferToShelf(buffer, fileName);
+      return { name: path.basename(dest), path: dest };
+    } catch (err) {
+      console.error('[Ghost-Drop] blob write failed:', err.message);
+      return null;
+    }
+  });
+
+  // ── OUTBOUND: native OS drag ──────────────────────────────────────────────
+  // Must be fire-and-forget (ipcMain.on, not handle) — startDrag() must be
+  // called synchronously with respect to the user's mouse-down gesture.
   ipcMain.on('ghost-drop:start-native-drag', (event, filePaths) => {
     if (!Array.isArray(filePaths) || filePaths.length === 0) return;
 
@@ -45,13 +66,9 @@ function registerInterceptors(ipcMain, win) {
       .createFromPath(path.join(__dirname, '..', 'assets', 'icon.png'))
       .resize({ width: 48, height: 48 });
 
-    // `file` (singular) is the officially documented, cross-platform-reliable
-    // path. `files` (plural) works on macOS but is flaky/undocumented on
-    // Windows, so we pass both: apps that understand `files` get the full
-    // batch, everything else falls back to the first file.
     event.sender.startDrag({
-      file: filePaths[0],
-      files: filePaths,
+      file:  filePaths[0],   // always present — universal fallback
+      files: filePaths,      // full batch (reliable on macOS, best-effort on Windows)
       icon,
     });
   });
