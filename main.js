@@ -16,9 +16,10 @@
  *        initSession   → create this run's temp staging directory
  *      Then tell the Executioner the session dir so it can purge it on exit.
  *   6. Show the tutorial on first ever launch.
+ *   7. Check for updates silently in the background (electron-updater).
  */
 
-const { app, ipcMain, Tray, Menu, nativeImage, shell } = require('electron');
+const { app, ipcMain, Tray, Menu, nativeImage, shell, dialog } = require('electron');
 const path = require('path');
 
 const ghostDirectory  = require('./modules/ghostDirectory');
@@ -28,6 +29,30 @@ const { createOverlayWindow, createTutorialWindow, wireResizeChannel } = require
 const { registerInterceptors } = require('./modules/osInterceptor');
 
 const SUPPORT_URL = 'https://flushop.lemonsqueezy.com/checkout/buy/7ee734e4-2fe7-403e-bf67-162c00549ae6';
+
+// ── Auto-updater ──────────────────────────────────────────────────────────────
+// Only active in a packaged build — dev mode skips it entirely.
+let autoUpdater = null;
+let updateAvailable = false;
+
+if (app.isPackaged) {
+  try {
+    autoUpdater = require('electron-updater').autoUpdater;
+    autoUpdater.autoDownload = true;        // Download silently in background
+    autoUpdater.autoInstallOnAppQuit = true; // Install when user quits normally
+
+    autoUpdater.on('update-available', () => {
+      updateAvailable = true;
+      rebuildTrayMenu(); // Show "Update available — restart to apply" in tray
+    });
+
+    autoUpdater.on('error', (err) => {
+      console.error('[Ghost-Drop] updater error:', err.message);
+    });
+  } catch (e) {
+    console.warn('[Ghost-Drop] electron-updater not available:', e.message);
+  }
+}
 
 let mainWindow    = null;
 let tutorialWindow = null;
@@ -76,6 +101,13 @@ async function bootstrap() {
   if (!preferences.getPrefs().tutorialSeen) {
     setTimeout(openTutorial, 700);
   }
+
+  // ── 7. Silent update check (packaged builds only) ─────────────────────────
+  if (autoUpdater) {
+    setTimeout(() => {
+      autoUpdater.checkForUpdatesAndNotify().catch(() => {});
+    }, 5000); // Wait 5 s after launch so it doesn't slow startup
+  }
 }
 
 // ── Tutorial ─────────────────────────────────────────────────────────────────
@@ -98,15 +130,8 @@ function wireTutorialChannels() {
 
 // ── Tray ──────────────────────────────────────────────────────────────────────
 
-function createTray() {
-  const trayIcon = nativeImage
-    .createFromPath(path.join(__dirname, 'assets', 'icon.png'))
-    .resize({ width: 16, height: 16 });
-
-  tray = new Tray(trayIcon);
-  tray.setToolTip('Ghost-Drop');
-
-  const menu = Menu.buildFromTemplate([
+function buildTrayMenuTemplate() {
+  const template = [
     {
       label: 'Show / hide overlay',
       click: () => {
@@ -125,13 +150,48 @@ function createTray() {
       click: () => shell.openExternal(SUPPORT_URL),
     },
     { type: 'separator' },
-    {
-      label: 'Quit Ghost-Drop',
-      click: () => app.quit(),
-    },
-  ]);
+  ];
 
-  tray.setContextMenu(menu);
+  if (updateAvailable) {
+    template.push({
+      label: 'Update available — restart to apply',
+      enabled: true,
+      click: () => {
+        if (autoUpdater) autoUpdater.quitAndInstall(false, true);
+      },
+    });
+    template.push({ type: 'separator' });
+  } else if (autoUpdater) {
+    template.push({
+      label: 'Check for updates',
+      click: () => {
+        autoUpdater.checkForUpdates().catch(() => {});
+      },
+    });
+    template.push({ type: 'separator' });
+  }
+
+  template.push({
+    label: 'Quit Ghost-Drop',
+    click: () => app.quit(),
+  });
+
+  return template;
+}
+
+function rebuildTrayMenu() {
+  if (!tray) return;
+  tray.setContextMenu(Menu.buildFromTemplate(buildTrayMenuTemplate()));
+}
+
+function createTray() {
+  const trayIcon = nativeImage
+    .createFromPath(path.join(__dirname, 'assets', 'icon.png'))
+    .resize({ width: 16, height: 16 });
+
+  tray = new Tray(trayIcon);
+  tray.setToolTip('Ghost-Drop');
+  tray.setContextMenu(Menu.buildFromTemplate(buildTrayMenuTemplate()));
   tray.on('click', () => tray.popUpContextMenu());
 }
 

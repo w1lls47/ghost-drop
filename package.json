@@ -9,6 +9,9 @@
     "pack": "electron-builder --dir",
     "dist": "electron-builder"
   },
+  "dependencies": {
+    "electron-updater": "^6.3.9"
+  },
   "devDependencies": {
     "electron": "^31.0.0",
     "electron-builder": "^25.0.0"
@@ -49,6 +52,11 @@
       "shortcutName": "Ghost-Drop",
       "artifactName": "GhostDrop-Setup-${version}.exe",
       "deleteAppDataOnUninstall": true
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "w1lls47",
+      "repo": "ghost-drop"
     }
   },
   "author": "FlushTech"
