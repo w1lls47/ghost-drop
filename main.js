@@ -1,5 +1,5 @@
 /**
- * GHOST-DROP — main process v1.2.0
+ * GHOST-DROP — main process v1.2.1
  * ----------------------------------
  * Boot order is intentional:
  *
@@ -27,7 +27,7 @@ const { armExitHooks, setSessionDir } = require('./modules/executioner');
 const { createOverlayWindow, createTutorialWindow, wireResizeChannel } = require('./modules/uiOverlay');
 const { registerInterceptors } = require('./modules/osInterceptor');
 
-const SUPPORT_URL = 'https://flushtechshop.lemonsqueezy.com/checkout/buy/7ee734e4-2fe7-403e-bf67-162c00549ae6';
+const SUPPORT_URL = 'https://flushop.lemonsqueezy.com/checkout/buy/7ee734e4-2fe7-403e-bf67-162c00549ae6';
 
 let mainWindow    = null;
 let tutorialWindow = null;
