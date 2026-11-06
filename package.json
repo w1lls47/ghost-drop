@@ -44,15 +44,15 @@
       "publisherName": "FlushTech"
     },
     "nsis": {
-      "oneClick": true,
-      "perMachine": false,
-      "allowToChangeInstallationDirectory": false,
+      "runAfterFinish": false,
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "shortcutName": "Ghost-Drop",
       "artifactName": "GhostDrop-Setup-${version}.exe",
       "deleteAppDataOnUninstall": true
-    },
+    }
     "publish": {
       "provider": "github",
       "owner": "w1lls47",
