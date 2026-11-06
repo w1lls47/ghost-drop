@@ -52,7 +52,7 @@
       "shortcutName": "Ghost-Drop",
       "artifactName": "GhostDrop-Setup-${version}.exe",
       "deleteAppDataOnUninstall": true
-    }
+    },
     "publish": {
       "provider": "github",
       "owner": "w1lls47",
