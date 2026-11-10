@@ -1,10 +1,14 @@
 # Ghost-Drop
 
-A stateless drag-and-drop "shelf." Drag a file onto it from a browser or
+A drag-and-drop file shelf for Windows. Drag a file onto it from a browser or
 Explorer, then drag it back out into Premiere, Photoshop, Discord, anywhere —
-Ghost-Drop owns the routing, the caching, and the cleanup. You never see a
-save dialog and you never have to remember to delete the temp file
-afterward.
+Ghost-Drop handles the routing and staging so you never see a save dialog.
+
+Files you drop are copied to a persistent shelf at `%APPDATA%\Ghost-Drop\Shelf`
+so they stay available across sessions and remain valid references in apps like
+Premiere. Shelf files are kept until you remove them or until Ghost-Drop
+automatically sweeps copies older than 30 days on next launch. The separate
+per-session temp directory is wiped on clean exit.
 
 This is the same category of utility as macOS tools like Yoink/Dropzone,
 built from scratch for the spec you gave me, mapped 1:1 onto Electron's
@@ -76,8 +80,8 @@ shown automatically once on first launch and reachable anytime after via
 drag-out, the hover shelf, done. "Seen" state is a one-line JSON flag in
 `modules/preferences.js`, stored in Electron's standard per-user app-data
 folder — separate from the Ghost Directory's temp cache, since whether
-you've seen the tutorial has nothing to do with the zero-footprint promise
-the rest of the app makes.
+you've seen the tutorial has nothing to do with the shelf storage the rest
+of the app manages.
 
 ## The tray menu
 
@@ -110,13 +114,14 @@ browser — no in-app payment flow, just a link), and **Quit Ghost-Drop**.
   reasons. The inbound side uses `webUtils.getPathForFile()` in the preload
   script instead — same result, just the current sanctioned way to resolve
   a dropped file's real OS path.
-- **Orphan sweep is the actual zero-footprint guarantee.** A graceful
-  `app.quit()` (via the tray) purges synchronously. A SIGKILL/Task-Manager
-  "End Task" gives the process zero notice, so nothing can run in that
-  case — but the next time Ghost-Drop launches, it scans `%TEMP%` for any
-  `GhostDrop_*` folder and deletes it before doing anything else. I tested
-  this path directly (simulated an orphaned folder, confirmed it gets wiped
-  on next launch).
+- **What gets deleted on exit vs. what persists.** A graceful `app.quit()`
+  (via the tray) wipes only the per-session temp directory synchronously.
+  The permanent shelf at `%APPDATA%\Ghost-Drop\Shelf` is intentionally kept
+  so file references in apps like Premiere stay valid. Shelf files are swept
+  automatically after 30 days on next launch. If the process is killed
+  without warning (Task Manager / SIGKILL), the session temp may remain as
+  an orphan — Ghost-Drop scans for and deletes any `GhostDrop_*` orphan
+  folder in `%TEMP%` before doing anything on next launch.
 - **Window placement**: top-right corner of the primary display, 150×150,
   24px margin, `alwaysOnTop` at the `screen-saver` z-level so it stays above
   fullscreen apps on Windows too.

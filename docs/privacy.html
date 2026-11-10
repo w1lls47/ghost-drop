@@ -38,11 +38,15 @@
   <h2>Local file storage (Shelf)</h2>
   <p>When you drop a local file, a remote URL, or a browser blob into the Ghost-Drop overlay, Ghost-Drop copies that file to a permanent shelf folder on your device:</p>
   <p><strong>%APPDATA%\Ghost-Drop\Shelf\</strong></p>
-  <p>This copy is kept so that the file remains available for drag-and-drop into target applications even if the original source is closed or unreachable. Files in the shelf are retained until they are manually removed or until they are automatically swept on the next application launch. Shelf files older than <strong>30 days</strong> are deleted silently at startup.</p>
+  <p>This copy is kept so that the file remains available for drag-and-drop into target applications even if the original source is closed or unreachable. Shelf files older than <strong>30 days</strong> are deleted silently at the next application launch.</p>
+  <p>The <strong>×</strong> button on a shelf item removes that item from the visible shelf list within the current session. It does not delete the underlying file from <code>%APPDATA%\Ghost-Drop\Shelf</code>. To permanently delete shelf copies, open that folder in File Explorer and delete the files directly, or allow the 30-day automatic sweep to remove them.</p>
   <p>No shelf files are uploaded or transmitted anywhere. All storage is local to your device.</p>
 
   <h2>Application preferences</h2>
   <p>Ghost-Drop saves user preferences (such as window position and opacity) using Electron's built-in storage, also located under your local AppData folder. These values never leave your device.</p>
+
+  <h2>Remote URL fetching</h2>
+  <p>When you drop a remote URL (from a browser tab, for example) onto the Ghost-Drop overlay, the application makes an outbound HTTP(S) request directly to that URL in order to download the file to your local shelf. This request originates from your device and goes to the host the URL points to. No data is sent to FlushTech or any third party — the request is solely between your device and the URL's host, initiated by your explicit drop action.</p>
 
   <h2>Telemetry</h2>
   <p>Ghost-Drop does not include any analytics, crash reporting, or telemetry of any kind. No usage data is collected or transmitted.</p>
