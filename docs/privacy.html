@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Ghost-Drop — Privacy Policy</title>
+  <title>Ghost-Drop &mdash; Privacy Policy</title>
   <style>
     :root { --bg: #0d0f14; --text: #d8e0f0; --dim: #8090aa; --accent: #00dcff; }
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -27,25 +27,28 @@
 <body>
 <div class="wrap">
   <h1>Ghost-Drop</h1>
-  <p class="meta">Privacy Policy &mdash; Effective date: 2026-11-06</p>
+  <p class="meta">Privacy Policy &mdash; Effective date: 2026-11-10</p>
 
   <h2>Overview</h2>
-  <p>Ghost-Drop is a free, offline desktop utility for Windows. It creates a frameless overlay that lets you stage files for drag-and-drop into other applications. This policy explains what data the application handles, how it is handled, and what leaves your device.</p>
+  <p>Ghost-Drop is a free, offline desktop utility for Windows. It creates a frameless overlay that lets you stage files for drag-and-drop into other applications. This policy explains what data the application handles, how it is stored locally, and what leaves your device.</p>
 
   <h2>Data collected</h2>
   <p>Ghost-Drop collects <strong>no personal data</strong>. The application does not create user accounts, does not require an internet connection, and does not transmit any information to external servers.</p>
 
-  <h2>Local file handling</h2>
-  <p>When you drag files into the Ghost-Drop overlay, their file paths are held temporarily in memory so they can be re-presented for drag-and-drop into a target application. These paths are never written to disk by Ghost-Drop, never uploaded anywhere, and are discarded when the session ends or the overlay is cleared. No copies of your files are made.</p>
+  <h2>Local file storage (Shelf)</h2>
+  <p>When you drop a local file, a remote URL, or a browser blob into the Ghost-Drop overlay, Ghost-Drop copies that file to a permanent shelf folder on your device:</p>
+  <p><strong>%APPDATA%\Ghost-Drop\Shelf\</strong></p>
+  <p>This copy is kept so that the file remains available for drag-and-drop into target applications even if the original source is closed or unreachable. Files in the shelf are retained until they are manually removed or until they are automatically swept on the next application launch. Shelf files older than <strong>30 days</strong> are deleted silently at startup.</p>
+  <p>No shelf files are uploaded or transmitted anywhere. All storage is local to your device.</p>
 
-  <h2>Application state and caching</h2>
-  <p>Ghost-Drop saves minimal preferences (window position, opacity setting) to your local AppData folder using Electron's built-in storage. These values never leave your device. The application does not cache file contents or file metadata beyond the active session.</p>
+  <h2>Application preferences</h2>
+  <p>Ghost-Drop saves user preferences (such as window position and opacity) using Electron's built-in storage, also located under your local AppData folder. These values never leave your device.</p>
 
   <h2>Telemetry</h2>
   <p>Ghost-Drop does not include any analytics, crash reporting, or telemetry of any kind. No usage data is collected or transmitted.</p>
 
   <h2>Third-party services</h2>
-  <p>Ghost-Drop does not integrate with any third-party service. The optional in-tray "Support FlushTech" link opens your default browser to an external donation page; this is a one-way navigation and no data is sent on your behalf by Ghost-Drop.</p>
+  <p>Ghost-Drop does not integrate with any third-party service. The optional in-tray "Support FlushTech" link opens your default browser to an external page; this is a one-way navigation and no data is sent on your behalf by Ghost-Drop.</p>
 
   <h2>Updates</h2>
   <p>Ghost-Drop does not auto-update. New versions are published as GitHub Releases at <a href="https://github.com/w1lls47/ghost-drop/releases">github.com/w1lls47/ghost-drop/releases</a>. Downloading an update is entirely voluntary and initiated by the user.</p>
