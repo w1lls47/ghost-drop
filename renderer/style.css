@@ -233,26 +233,28 @@ body[data-state="expanded"] #filePanel {
 
 .grip {
   flex: 0 0 auto;
-  font-size: 11px;
-  color: var(--text-dim);
+  font-size: 12px;
+  /* Visible at rest so users know rows are reorderable */
+  color: rgba(255, 255, 255, 0.45);
   cursor: grab;
-  padding: 2px 2px;
+  padding: 2px 3px;
   line-height: 1;
-  transition: color 120ms ease;
+  transition: color 120ms ease, transform 100ms ease;
 }
-.grip:hover  { color: var(--text); }
+.grip:hover  { color: rgba(0, 229, 255, 0.85); transform: scale(1.15); }
 .grip:active { cursor: grabbing; }
 
 /* ── Remove button ── */
 
 .remove-btn {
   flex: 0 0 auto;
-  width: 16px; height: 16px;
+  width: 17px; height: 17px;
   border: none;
   border-radius: 50%;
-  background: transparent;
-  color: var(--text-dim);
-  font-size: 13px;
+  /* Faintly visible at rest — not invisible, not distracting */
+  background: rgba(255, 255, 255, 0.07);
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 14px;
   line-height: 1;
   display: flex;
   align-items: center;
@@ -260,9 +262,10 @@ body[data-state="expanded"] #filePanel {
   cursor: pointer;
   padding: 0;
   font-family: inherit;
-  transition: background-color 120ms ease, color 120ms ease;
+  transition: background-color 120ms ease, color 120ms ease, transform 100ms ease;
 }
 .remove-btn:hover {
-  background: rgba(255, 80, 80, 0.20);
-  color: #ff6b6b;
+  background: rgba(255, 60, 60, 0.28);
+  color: #ff7070;
+  transform: scale(1.15);
 }

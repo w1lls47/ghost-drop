@@ -1,5 +1,5 @@
 /**
- * GHOST-DROP — main process v1.2.1
+ * GHOST-DROP — main process v1.2.2
  * ----------------------------------
  * Boot order is intentional:
  *
@@ -16,7 +16,7 @@
  *        initSession   → create this run's temp staging directory
  *      Then tell the Executioner the session dir so it can purge it on exit.
  *   6. Show the tutorial on first ever launch.
- *   7. Check for updates silently in the background (electron-updater).
+ *   7. No automatic update check — user triggers manually via tray menu.
  */
 
 const { app, ipcMain, Tray, Menu, nativeImage, shell, dialog } = require('electron');
@@ -44,6 +44,10 @@ if (app.isPackaged) {
     autoUpdater.on('update-available', () => {
       updateAvailable = true;
       rebuildTrayMenu(); // Show "Update available — restart to apply" in tray
+    });
+
+    autoUpdater.on('update-not-available', () => {
+      // Handled inline in the tray click — nothing extra needed here.
     });
 
     autoUpdater.on('error', (err) => {
@@ -102,12 +106,7 @@ async function bootstrap() {
     setTimeout(openTutorial, 700);
   }
 
-  // ── 7. Silent update check (packaged builds only) ─────────────────────────
-  if (autoUpdater) {
-    setTimeout(() => {
-      autoUpdater.checkForUpdatesAndNotify().catch(() => {});
-    }, 5000); // Wait 5 s after launch so it doesn't slow startup
-  }
+  // ── 7. No automatic update check — user triggers manually via tray menu ──
 }
 
 // ── Tutorial ─────────────────────────────────────────────────────────────────
@@ -165,7 +164,24 @@ function buildTrayMenuTemplate() {
     template.push({
       label: 'Check for updates',
       click: () => {
-        autoUpdater.checkForUpdates().catch(() => {});
+        autoUpdater.checkForUpdates().then(result => {
+          // result is null when no update is found
+          if (!result || !result.updateInfo) {
+            dialog.showMessageBox({
+              type: 'info',
+              title: 'Ghost-Drop',
+              message: 'You are on the latest version.',
+              buttons: ['OK'],
+            }).catch(() => {});
+          }
+        }).catch(() => {
+          dialog.showMessageBox({
+            type: 'info',
+            title: 'Ghost-Drop',
+            message: 'Could not check for updates. Check your internet connection.',
+            buttons: ['OK'],
+          }).catch(() => {});
+        });
       },
     });
     template.push({ type: 'separator' });

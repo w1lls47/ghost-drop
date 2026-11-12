@@ -1,5 +1,5 @@
 /**
- * Ghost-Drop overlay renderer — v1.2.0
+ * Ghost-Drop overlay renderer — v1.2.1
  *
  * State machine  (body[data-state]):
  *   idle      — no files cached, no external drag happening
@@ -365,11 +365,13 @@ function startReorder(targetPath) {
 function handOff(subset) {
   if (subset.length === 0) return;
   window.ghostDrop.startNativeDrag(subset.map(f => f.path));
-  const gone = new Set(subset.map(f => f.path));
-  cachedFiles = cachedFiles.filter(f => !gone.has(f.path));
-  for (const p of gone) selectedPaths.delete(p);
-  if (cachedFiles.length === 0) requestCollapse();
-  else render();
+  // Files stay on the shelf. Only the × button removes them.
+  // Reset dragDepth: when an outbound native drag starts, Chromium can fire a
+  // spurious dragenter on the window. If that drag ends outside (e.g. dropped
+  // into Premiere), no matching dragleave ever fires, leaving dragDepth stuck
+  // at 1 and the app frozen in the teal hover state. Resetting here unblocks it.
+  dragDepth = 0;
+  render();
 }
 
 // Drag the main ghost icon → hand off selection (or everything if nothing selected)

@@ -76,8 +76,9 @@ icon looks identical to v1 until you actually hover or populate it.
 
 A separate small frameless card window (`renderer/tutorial.html/css/js`),
 shown automatically once on first launch and reachable anytime after via
-**tray icon → "Show tutorial."** Five short slides: what it is, drop-in,
-drag-out, the hover shelf, done. "Seen" state is a one-line JSON flag in
+**tray icon → "Show tutorial."** Six short slides: what it is, drop-in,
+drag-out (files stay on shelf), the hover shelf, removing files, and the
+shelf persistence model. "Seen" state is a one-line JSON flag in
 `modules/preferences.js`, stored in Electron's standard per-user app-data
 folder — separate from the Ghost Directory's temp cache, since whether
 you've seen the tutorial has nothing to do with the shelf storage the rest
@@ -86,8 +87,10 @@ of the app manages.
 ## The tray menu
 
 Right-click the tray icon for: **Show/hide overlay**, **Show tutorial**,
-**Support FlushTech** (opens your Lemon Squeezy tip page in the default
-browser — no in-app payment flow, just a link), and **Quit Ghost-Drop**.
+**Support FlushTech** (opens the Lemon Squeezy page in the default browser —
+no in-app payment flow, just a link), **Check for updates** (manual only —
+no background polling; shows a dialog if you're already on the latest
+version), and **Quit Ghost-Drop**.
 
 ## A few implementation notes worth knowing
 
