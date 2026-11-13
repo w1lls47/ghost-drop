@@ -1,6 +1,6 @@
 {
   "name": "ghost-drop",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "Stateless drag-and-drop file shelf. Drop it in, drag it out, it never asks where to save and never leaves a trace.",
   "main": "main.js",
   "private": true,

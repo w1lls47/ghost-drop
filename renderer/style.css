@@ -31,6 +31,10 @@ html, body {
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  /* Pin the icon to the bottom of the window so it stays in the
+     bottom-right corner whether the window is collapsed or expanded.
+     The panel (#filePanel) is first in DOM and unfolds above the icon. */
+  justify-content: flex-end;
 }
 
 /* ── Icon area (always 150 × 150) ──────────────────────────────────────── */
@@ -106,7 +110,7 @@ body[data-loading="true"] #icon {
 #filePanel {
   width: 150px;
   box-sizing: border-box;
-  margin-top: 8px;
+  margin-bottom: 8px; /* gap between panel and the icon below it */
   border-radius: 16px;
   padding: 8px;
   background: var(--panel-bg);
@@ -122,7 +126,10 @@ body[data-loading="true"] #icon {
   /* ── Collapsed state (default) ── */
   max-height: 0;
   opacity: 0;
-  transform: translateY(-6px) scale(0.97);
+  /* Panel sits above the icon and unfolds upward, so the resting "ghost"
+     position is slightly below its final location (translateY positive =
+     toward the icon). It slides up into place as it expands. */
+  transform: translateY(6px) scale(0.97);
   pointer-events: none;
 
   /* Expand easing: spring with slight overshoot for the "liquid" snap */

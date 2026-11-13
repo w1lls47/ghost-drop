@@ -1,5 +1,5 @@
 /**
- * Ghost-Drop overlay renderer — v1.2.1
+ * Ghost-Drop overlay renderer — v1.2.2
  *
  * State machine  (body[data-state]):
  *   idle      — no files cached, no external drag happening
@@ -157,6 +157,9 @@ function requestExpand() {
 
 function requestCollapse() {
   if (!isExpanded) return;
+  // Never collapse while a file drag is active — doing so would shrink the
+  // window and remove the drop target while the user is still carrying a file.
+  if (dragDepth > 0) return;
   clearExpandTimer();
   filePanel.classList.add('collapsing');
   isExpanded = false;
@@ -187,6 +190,11 @@ window.addEventListener('mouseenter', () => {
 window.addEventListener('mouseleave', () => {
   clearExpandTimer();
   if (isReordering) return;
+  // Don't start the collapse timer while an external drag is active over this
+  // window (dragDepth > 0). The 'mouseleave' that fires as the user picks up
+  // a file and brings it back would otherwise shrink the window mid-drag,
+  // making the drop target disappear.
+  if (dragDepth > 0) return;
   collapseTimer = setTimeout(requestCollapse, 160);
 });
 
@@ -197,6 +205,19 @@ window.addEventListener('mouseleave', () => {
 
 window.addEventListener('dragenter', () => { dragDepth++; render(); });
 window.addEventListener('dragleave', () => { dragDepth = Math.max(0, dragDepth - 1); render(); });
+
+// dragend fires when the user cancels a drag (Escape key) or the drag
+// ends without a successful drop. Reset dragDepth so the state machine
+// doesn't get stuck in 'hover' and also clear any pending collapse that
+// was held off during the drag.
+window.addEventListener('dragend', () => {
+  dragDepth = 0;
+  render();
+  if (isExpanded && !isReordering) {
+    clearCollapseTimer();
+    collapseTimer = setTimeout(requestCollapse, 160);
+  }
+});
 
 window.addEventListener('drop', async e => {
   dragDepth = 0;
@@ -365,6 +386,7 @@ function startReorder(targetPath) {
 function handOff(subset) {
   if (subset.length === 0) return;
   window.ghostDrop.startNativeDrag(subset.map(f => f.path));
+
   // Files stay on the shelf. Only the × button removes them.
   // Reset dragDepth: when an outbound native drag starts, Chromium can fire a
   // spurious dragenter on the window. If that drag ends outside (e.g. dropped
@@ -372,6 +394,16 @@ function handOff(subset) {
   // at 1 and the app frozen in the teal hover state. Resetting here unblocks it.
   dragDepth = 0;
   render();
+
+  // After startNativeDrag the OS drag takes ownership of the cursor.
+  // Ghost-Drop's window won't receive a mouseleave event while the OS drag
+  // is in flight, so the collapse timer never starts on its own — the shelf
+  // stays open permanently. Kick the timer here so the shelf retracts cleanly
+  // after the user drops the file into another app.
+  if (isExpanded && !isReordering) {
+    clearCollapseTimer();
+    collapseTimer = setTimeout(requestCollapse, 400);
+  }
 }
 
 // Drag the main ghost icon → hand off selection (or everything if nothing selected)

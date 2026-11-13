@@ -30,14 +30,17 @@ function getAnchor() {
   if (_anchor) return _anchor;
   const { workArea } = screen.getPrimaryDisplay();
   _anchor = {
-    x: workArea.x + workArea.width - ICON_SIZE - MARGIN,
-    y: workArea.y + MARGIN,
+    x:      workArea.x + workArea.width  - ICON_SIZE - MARGIN,
+    // bottom: the y-coordinate of the BOTTOM edge of the icon.
+    // The icon sits in the bottom-right corner; the panel unfolds above it.
+    bottom: workArea.y + workArea.height - MARGIN,
   };
   return _anchor;
 }
 
 function createOverlayWindow() {
-  const { x, y } = getAnchor();
+  const { x, bottom } = getAnchor();
+  const y = bottom - ICON_SIZE;
 
   const win = new BrowserWindow({
     width:  ICON_SIZE,
@@ -79,16 +82,18 @@ function createOverlayWindow() {
  *                           snap window back to ICON_SIZE.
  */
 function wireResizeChannel(ipcMain, win) {
-  const { x, y } = getAnchor();
+  const { x, bottom } = getAnchor();
 
   ipcMain.on('ghost-drop:expand', () => {
     if (!win || win.isDestroyed()) return;
-    win.setBounds({ x, y, width: ICON_SIZE, height: EXPANDED_H });
+    // Grow the window UPWARD: keep the bottom edge fixed, raise the top.
+    win.setBounds({ x, y: bottom - EXPANDED_H, width: ICON_SIZE, height: EXPANDED_H });
   });
 
   ipcMain.on('ghost-drop:collapse-done', () => {
     if (!win || win.isDestroyed()) return;
-    win.setBounds({ x, y, width: ICON_SIZE, height: ICON_SIZE });
+    // Shrink back to icon size; bottom edge stays at the same screen position.
+    win.setBounds({ x, y: bottom - ICON_SIZE, width: ICON_SIZE, height: ICON_SIZE });
   });
 }
 
