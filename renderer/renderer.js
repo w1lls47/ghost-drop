@@ -1,5 +1,5 @@
 /**
- * Ghost-Drop overlay renderer — v1.2.3
+ * Ghost-Drop overlay renderer — v1.2.4
  *
  * State machine  (body[data-state]):
  *   idle      — no files cached, no external drag happening
@@ -257,6 +257,17 @@ window.addEventListener('drop', async e => {
   }
 });
 
+// When the cursor moves freely (no button held, no ongoing reorder), clear any
+// stale dragDepth. Electron's startDrag() fires dragenter on the window as the
+// cursor moves, but never fires dragend or dragleave when the native drag ends
+// outside — leaving dragDepth stuck at >0 and blocking mouseenter-based expand.
+window.addEventListener('mousemove', e => {
+  if (e.buttons === 0 && dragDepth > 0 && !isReordering) {
+    dragDepth = 0;
+    render();
+  }
+});
+
 async function processDropData(files, items, uriList) {
   const result = [];
 
@@ -266,9 +277,20 @@ async function processDropData(files, items, uriList) {
     .filter(p => p && p.length > 0);
 
   if (localPaths.length > 0) {
+    // Guard: when an outbound native drag ends, Electron/Chromium fires a
+    // 'drop' event on this window carrying the same shelf file paths we just
+    // dragged out. Without this check, copyFileIn() would create "(1)", "(2)"
+    // duplicates every time the user drags a file to another app — 1 file
+    // becomes 2, then 4, then 8, and so on. Only ingest paths that are not
+    // already on the shelf.
+    const freshPaths = localPaths.filter(
+      p => !cachedFiles.some(f => f.path === p)
+    );
+    if (freshPaths.length === 0) return result; // all paths already on shelf — nothing to do
+
     setLoading(+1);
     try {
-      const cached = await window.ghostDrop.dropFiles(localPaths);
+      const cached = await window.ghostDrop.dropFiles(freshPaths);
       result.push(...cached);
     } finally {
       setLoading(-1);
