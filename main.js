@@ -1,5 +1,5 @@
 /**
- * GHOST-DROP — main process v1.2.2
+ * GHOST-DROP — main process v1.2.3
  * ----------------------------------
  * Boot order is intentional:
  *
@@ -32,26 +32,50 @@ const SUPPORT_URL = 'https://flushop.lemonsqueezy.com/checkout/buy/7ee734e4-2fe7
 
 // ── Auto-updater ──────────────────────────────────────────────────────────────
 // Only active in a packaged build — dev mode skips it entirely.
-let autoUpdater = null;
+let autoUpdater     = null;
 let updateAvailable = false;
+let updateDownloaded = false;
 
 if (app.isPackaged) {
   try {
     autoUpdater = require('electron-updater').autoUpdater;
-    autoUpdater.autoDownload = true;        // Download silently in background
-    autoUpdater.autoInstallOnAppQuit = true; // Install when user quits normally
+    autoUpdater.autoDownload = true;         // Download silently in background
+    autoUpdater.autoInstallOnAppQuit = false; // User chooses when to restart
 
-    autoUpdater.on('update-available', () => {
+    autoUpdater.on('update-available', (info) => {
       updateAvailable = true;
-      rebuildTrayMenu(); // Show "Update available — restart to apply" in tray
+      updateDownloaded = false;
+      rebuildTrayMenu(); // Tray now shows "Downloading update..."
+    });
+
+    autoUpdater.on('update-downloaded', () => {
+      updateDownloaded = true;
+      rebuildTrayMenu(); // Tray now shows "Restart to install update"
+      dialog.showMessageBox({
+        type: 'info',
+        title: 'Ghost-Drop - Update Ready',
+        message: 'The update has been downloaded. Click "Restart to install" in the tray whenever you are ready.',
+        buttons: ['OK'],
+      }).catch(() => {});
     });
 
     autoUpdater.on('update-not-available', () => {
-      // Handled inline in the tray click — nothing extra needed here.
+      dialog.showMessageBox({
+        type: 'info',
+        title: 'Ghost-Drop',
+        message: 'You are on the latest version.',
+        buttons: ['OK'],
+      }).catch(() => {});
     });
 
     autoUpdater.on('error', (err) => {
       console.error('[Ghost-Drop] updater error:', err.message);
+      dialog.showMessageBox({
+        type: 'info',
+        title: 'Ghost-Drop',
+        message: 'Could not check for updates. Please check your internet connection.',
+        buttons: ['OK'],
+      }).catch(() => {});
     });
   } catch (e) {
     console.warn('[Ghost-Drop] electron-updater not available:', e.message);
@@ -151,39 +175,20 @@ function buildTrayMenuTemplate() {
     { type: 'separator' },
   ];
 
-  if (updateAvailable) {
-    template.push({
-      label: 'Update available — restart to apply',
-      enabled: true,
-      click: () => {
-        if (autoUpdater) autoUpdater.quitAndInstall(false, true);
-      },
-    });
-    template.push({ type: 'separator' });
-  } else if (autoUpdater) {
-    template.push({
-      label: 'Check for updates',
-      click: () => {
-        autoUpdater.checkForUpdates().then(result => {
-          // result is null when no update is found
-          if (!result || !result.updateInfo) {
-            dialog.showMessageBox({
-              type: 'info',
-              title: 'Ghost-Drop',
-              message: 'You are on the latest version.',
-              buttons: ['OK'],
-            }).catch(() => {});
-          }
-        }).catch(() => {
-          dialog.showMessageBox({
-            type: 'info',
-            title: 'Ghost-Drop',
-            message: 'Could not check for updates. Check your internet connection.',
-            buttons: ['OK'],
-          }).catch(() => {});
-        });
-      },
-    });
+  if (autoUpdater) {
+    if (updateDownloaded) {
+      template.push({
+        label: 'Restart to install update',
+        click: () => autoUpdater.quitAndInstall(false, true),
+      });
+    } else if (updateAvailable) {
+      template.push({ label: 'Downloading update...', enabled: false });
+    } else {
+      template.push({
+        label: 'Check for updates',
+        click: () => { autoUpdater.checkForUpdates().catch(() => {}); },
+      });
+    }
     template.push({ type: 'separator' });
   }
 

@@ -1,5 +1,5 @@
 /**
- * Ghost-Drop overlay renderer — v1.2.2
+ * Ghost-Drop overlay renderer — v1.2.3
  *
  * State machine  (body[data-state]):
  *   idle      — no files cached, no external drag happening
@@ -35,6 +35,14 @@ let loadingCount  = 0;   // number of active URL/blob fetches
 
 let expandTimer   = null;
 let collapseTimer = null;
+
+// When the native window repositions on expand/collapse (setBounds moves it
+// up or down by 250px), Chromium synthesises spurious mouseleave/mouseenter
+// events. These flags suppress those phantom events for a short window so
+// the state machine doesn't immediately re-collapse after expanding, or
+// re-expand after collapsing.
+let ignoringMouseLeave = false;
+let ignoringMouseEnter = false;
 
 // ── File type helpers ─────────────────────────────────────────────────────────
 const IMAGE_EXTS = new Set(['.png','.jpg','.jpeg','.gif','.webp','.bmp','.svg','.ico','.avif']);
@@ -148,7 +156,12 @@ function requestExpand() {
   filePanel.classList.remove('collapsing');
   // 1. Grow the native window first (single setBounds call)
   window.ghostDrop.expand();
-  // 2. One frame later, trigger the CSS transition into the now-available space
+  // 2. The window moves up 250px on expand. Chromium synthesises a spurious
+  //    mouseleave (cursor appears to leave the repositioned window). Ignore
+  //    mouseleave for 300ms so we don't immediately collapse again.
+  ignoringMouseLeave = true;
+  setTimeout(() => { ignoringMouseLeave = false; }, 300);
+  // 3. One frame later, trigger the CSS transition into the now-available space
   requestAnimationFrame(() => {
     isExpanded = true;
     syncState();
@@ -175,11 +188,17 @@ filePanel.addEventListener('transitionend', e => {
   if (e.propertyName === 'max-height' && !isExpanded) {
     filePanel.classList.remove('collapsing');
     window.ghostDrop.collapseDone();
+    // The window moves down 250px on collapse. Chromium may synthesise a
+    // spurious mouseenter (window repositions into cursor path). Ignore
+    // mouseenter for 300ms so we don't immediately re-expand.
+    ignoringMouseEnter = true;
+    setTimeout(() => { ignoringMouseEnter = false; }, 300);
   }
 });
 
 // ── Hover (mouse, not file drag) ──────────────────────────────────────────────
 window.addEventListener('mouseenter', () => {
+  if (ignoringMouseEnter) return; // suppress post-collapse spurious event
   if (dragDepth > 0) return; // they're carrying a file — don't expand the list
   clearCollapseTimer();
   if (!isExpanded && cachedFiles.length > 0) {
@@ -189,6 +208,7 @@ window.addEventListener('mouseenter', () => {
 
 window.addEventListener('mouseleave', () => {
   clearExpandTimer();
+  if (ignoringMouseLeave) return; // suppress post-expand spurious event
   if (isReordering) return;
   // Don't start the collapse timer while an external drag is active over this
   // window (dragDepth > 0). The 'mouseleave' that fires as the user picks up

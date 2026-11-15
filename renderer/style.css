@@ -23,26 +23,24 @@
 html, body {
   margin: 0; padding: 0;
   width: 150px;
+  height: 100%;
   background: transparent;
   font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
   -webkit-user-select: none;
   user-select: none;
   -webkit-app-region: no-drag;
   overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  /* Pin the icon to the bottom of the window so it stays in the
-     bottom-right corner whether the window is collapsed or expanded.
-     The panel (#filePanel) is first in DOM and unfolds above the icon. */
-  justify-content: flex-end;
+  position: relative; /* anchor for absolutely-positioned children */
 }
 
 /* ── Icon area (always 150 × 150) ──────────────────────────────────────── */
 
 #dropzone {
+  position: absolute;
+  bottom: 0;
+  left: 0;
   width: 150px;
   height: 150px;
-  flex: 0 0 150px;
   border-radius: 18px;
   box-sizing: border-box;
   display: flex;
@@ -108,9 +106,11 @@ body[data-loading="true"] #icon {
 /* ── File panel (CSS-animated, Chromium compositor handles it) ──────────── */
 
 #filePanel {
+  position: absolute;
+  bottom: 158px; /* 150px icon + 8px gap — panel grows upward from this anchor */
+  left: 0;
   width: 150px;
   box-sizing: border-box;
-  margin-bottom: 8px; /* gap between panel and the icon below it */
   border-radius: 16px;
   padding: 8px;
   background: var(--panel-bg);
