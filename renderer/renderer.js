@@ -1,5 +1,5 @@
 /**
- * Ghost-Drop overlay renderer — v1.2.4
+ * Ghost-Drop overlay renderer — v1.2.5
  *
  * State machine  (body[data-state]):
  *   idle      — no files cached, no external drag happening

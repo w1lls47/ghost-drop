@@ -1,5 +1,5 @@
 /**
- * GHOST-DROP — main process v1.2.4
+ * GHOST-DROP — main process v1.2.5
  * ----------------------------------
  * Boot order is intentional:
  *
