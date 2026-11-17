@@ -1,5 +1,5 @@
 /**
- * Ghost-Drop overlay renderer — v1.2.5
+ * Ghost-Drop overlay renderer — v1.2.6
  *
  * State machine  (body[data-state]):
  *   idle      — no files cached, no external drag happening
@@ -22,6 +22,7 @@ const dropzone   = document.getElementById('dropzone');
 const countEl    = document.getElementById('count');
 const filePanel  = document.getElementById('filePanel');
 const fileListEl = document.getElementById('fileList');
+const pinBtnEl   = document.getElementById('pinBtn');
 
 // ── State ─────────────────────────────────────────────────────────────────────
 /** @type {{name:string, path:string}[]} */
@@ -30,6 +31,7 @@ const selectedPaths = new Set();
 
 let dragDepth     = 0;   // counts OS drag enter/leave pairs (inbound file gesture)
 let isExpanded    = false;
+let isPinned      = false; // true = shelf stays open regardless of mouse position
 let isReordering  = false;
 let loadingCount  = 0;   // number of active URL/blob fetches
 
@@ -151,7 +153,9 @@ function makeRow(f) {
 
 // ── Expand / Collapse ─────────────────────────────────────────────────────────
 function requestExpand() {
-  if (cachedFiles.length === 0 || isExpanded) return;
+  // Shelf only opens when there are 2 or more files. With a single file the
+  // icon + count badge is enough — no need to expand the drawer.
+  if (cachedFiles.length < 2 || isExpanded) return;
   clearCollapseTimer();
   filePanel.classList.remove('collapsing');
   // 1. Grow the native window first (single setBounds call)
@@ -173,9 +177,16 @@ function requestCollapse() {
   // Never collapse while a file drag is active — doing so would shrink the
   // window and remove the drop target while the user is still carrying a file.
   if (dragDepth > 0) return;
+  // Shelf is pinned — user wants it to stay open.
+  if (isPinned) return;
   clearExpandTimer();
   filePanel.classList.add('collapsing');
   isExpanded = false;
+  // Guard against immediate re-expand: once collapse starts, mouseenter would
+  // call requestExpand() because isExpanded is now false. Suppress it for the
+  // full transition duration (220ms) plus a margin so the shelf actually closes.
+  ignoringMouseEnter = true;
+  setTimeout(() => { ignoringMouseEnter = false; }, 400);
   syncState(); // removes 'expanded' → CSS collapse transition starts
 }
 
@@ -201,7 +212,7 @@ window.addEventListener('mouseenter', () => {
   if (ignoringMouseEnter) return; // suppress post-collapse spurious event
   if (dragDepth > 0) return; // they're carrying a file — don't expand the list
   clearCollapseTimer();
-  if (!isExpanded && cachedFiles.length > 0) {
+  if (!isExpanded && cachedFiles.length >= 2) {
     expandTimer = setTimeout(requestExpand, 60); // tiny debounce, avoids accidental opens
   }
 });
@@ -363,7 +374,16 @@ fileListEl.addEventListener('click', e => {
     cachedFiles = cachedFiles.filter(f => f.path !== p);
     selectedPaths.delete(p);
     render();
-    if (cachedFiles.length === 0) requestCollapse();
+    if (cachedFiles.length === 0) {
+      isPinned = false;
+      pinBtnEl.classList.remove('active');
+      requestCollapse();
+    } else if (cachedFiles.length === 1 && isExpanded) {
+      // Dropped to 1 file — shelf doesn't show for single files, collapse it
+      isPinned = false;
+      pinBtnEl.classList.remove('active');
+      requestCollapse();
+    }
     return;
   }
 
@@ -467,6 +487,19 @@ fileListEl.addEventListener('dragstart', e => {
   e.preventDefault();
   const f = cachedFiles.find(x => x.path === row.dataset.path);
   if (f) handOff([f]);
+});
+
+// ── Pin button ───────────────────────────────────────────────────────────────
+pinBtnEl.addEventListener('click', e => {
+  e.stopPropagation();
+  isPinned = !isPinned;
+  pinBtnEl.classList.toggle('active', isPinned);
+  pinBtnEl.title = isPinned ? 'Unpin shelf' : 'Pin shelf open';
+  // If the user unpins while hovering, restart the normal collapse timer
+  if (!isPinned && isExpanded) {
+    clearCollapseTimer();
+    collapseTimer = setTimeout(requestCollapse, 160);
+  }
 });
 
 // ── Initial render ────────────────────────────────────────────────────────────
